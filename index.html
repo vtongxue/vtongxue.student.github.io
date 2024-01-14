@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodge the Bullets</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const player = {
+        x: 375,
+        y: 500,
+        width: 50,
+        height: 50,
+        color: "#00F",
+        speed: 10
+    };
+
+    let bullets = [];
+    let isGameOver = false;
+
+    function drawPlayer() {
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawBullets() {
+        ctx.fillStyle = "#F00";
+        bullets.forEach(bullet => {
+            ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+        });
+    }
+
+    function moveBullets() {
+        bullets.forEach(bullet => {
+            bullet.y += 5;
+            if (bullet.y > canvas.height) {
+                bullet.y = 0;
+                bullet.x = Math.random() * (canvas.width - bullet.width);
+            }
+
+            // 检查是否和玩家发生碰撞
+            if (
+                player.x < bullet.x + bullet.width &&
+                player.x + player.width > bullet.x &&
+                player.y < bullet.y + bullet.height &&
+                player.y + player.height > bullet.y
+            ) {
+                gameOver();
+            }
+        });
+    }
+
+    function gameLoop() {
+        if (isGameOver) {
+            return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawPlayer();
+        drawBullets();
+        moveBullets();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameOver() {
+        console.log("游戏结束！");
+        isGameOver = true;
+
+        // 重生机制
+        setTimeout(() => {
+            isGameOver = false;
+            player.x = 375;
+            player.y = 500;
+            bullets = [];
+            startBullets();
+            gameLoop();
+        }, 2000); // 2秒后重生
+    }
+
+    function startBullets() {
+        // 初始化子弹
+        for (let i = 0; i < 5; i++) {
+            bullets.push({
+                x: Math.random() * (canvas.width - 20),
+                y: Math.random() * canvas.height,
+                width: 20,
+                height: 20
+            });
+        }
+    }
+
+    window.addEventListener("keydown", function (event) {
+        if (isGameOver) {
+            return;
+        }
+
+        switch (event.key) {
+            case "ArrowLeft":
+                player.x -= player.speed;
+                break;
+            case "ArrowRight":
+                player.x += player.speed;
+                break;
+        }
+
+        // 限制玩家移动范围
+        player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    });
+
+    // 启动游戏循环
+    startBullets();
+    gameLoop();
+</script>
+
+</body>
+</html>
